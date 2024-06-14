@@ -303,10 +303,51 @@ try {
 }});
 
 // Rutas CRUD de Clasificaciones
-app.get("/clasificacion", async (req, res) => {/*...*/});
-app.post("/clasificacion", async (req, res) => {/*...*/});
-app.put("/clasificacion/:id", async (req, res) => {/*...*/});
-app.delete("/clasificacion/:id", async (req, res) => {/*...*/});
+app.get("/clasificacion", async (req, res) => {try {
+        const clasificaciones = await Clasificacion.find();
+        res.json(clasificaciones);
+    } catch (error) {
+        console.error("Error al obtener todas las clasificaciones", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
+
+app.post("/clasificacion", async (req, res) => {try {
+        const nuevaClasificacion = new Clasificacion(req.body);
+        await nuevaClasificacion.save();
+        res.status(201).json(nuevaClasificacion);
+    } catch (error) {
+        console.error("Error al crear una nueva clasificación", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
+
+app.put("/clasificacion/:id", async (req, res) => {const { id } = req.params;
+    try {
+        const updatedClasificacion = await Clasificacion.findByIdAndUpdate(id, req.body, { new: true });
+        if (!updatedClasificacion) {
+            return res.status(404).json({ error: "Clasificación no encontrada" });
+        }
+        res.json(updatedClasificacion);
+    } catch (error) {
+        console.error("Error al actualizar la clasificación", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
+
+app.delete("/clasificacion/:id", async (req, res) => {const { id } = req.params;
+    try {
+        const deletedClasificacion = await Clasificacion.findByIdAndDelete(id);
+        if (!deletedClasificacion) {
+            return res.status(404).json({ error: "Clasificación no encontrada" });
+        }
+        res.json(deletedClasificacion);
+    } catch (error) {
+        console.error("Error al eliminar la clasificación", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
+
 
 // Rutas CRUD de Películas
 app.get("/movie", async (req, res) => {try {
