@@ -58,10 +58,26 @@ const matSchema = new mongoose.Schema({
         required: [true, "Property is required"],
     }
 });
-
+//CAMBIOS--13-05.24
+const peliculaSchema = new mongoose.Schema({
+    titulo: {
+        type: String,
+        required: [true, "El título de la película es obligatorio"]
+    },
+    descripcion: String,
+    genero: String,
+    clasificacion: String,
+    yearLanzamiento: Number,
+    puntuacion: {
+        type: Number,
+        min: 1,
+        max: 5
+    }
+});
 const Calificacion = mongoose.model("Calificaciones", califSchema);
 const Usuario = mongoose.model("Usuarios", userSchema);
 const Materia = mongoose.model("Materias", matSchema);
+const Pelicula = mongoose.model("Pelicula", peliculaSchema); //CAMBIOS--13-05.24
 
             // LOGICA DE LOGIN
 app.post("/login", async (req, res) => {
@@ -257,7 +273,99 @@ app.delete("/materias/:id", async (req, res) => {
       res.status(500).json({ error: "Error interno del servidor" });
   }
 });
+            
+//CAMBIOS--13-05.24
 
+// Ruta GET Películas
+app.get("/peliculas", async (req, res) => {
+    try {
+        const peliculas = await Pelicula.find();
+        res.json(peliculas);
+    } catch (error) {
+        console.error("Error al obtener todas las películas:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
+
+// Ruta GET Película por ID
+app.get("/peliculas/:id", async (req, res) => {
+    try {
+        const pelicula = await Pelicula.findById(req.params.id);
+        if (!pelicula) {
+            return res.status(404).json({ error: "Película no encontrada" });
+        }
+        res.json(pelicula);
+    } catch (error) {
+        console.error("Error al obtener la película:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
+
+// Ruta POST Película
+app.post("/peliculas", async (req, res) => {
+    try {
+        const nuevaPelicula = new Pelicula(req.body);
+        await nuevaPelicula.save();
+        res.status(201).json(nuevaPelicula);
+    } catch (error) {
+        console.error("Error al crear una nueva película:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
+
+// Ruta PUT Película
+app.put("/peliculas/:id", async (req, res) => {
+    try {
+        const peliculaActualizada = await Pelicula.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        if (!peliculaActualizada) {
+            return res.status(404).json({ error: "Película no encontrada" });
+        }
+        res.json(peliculaActualizada);
+    } catch (error) {
+        console.error("Error al actualizar la película:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
+
+// Ruta DELETE Película
+app.delete("/peliculas/:id", async (req, res) => {
+    try {
+        const peliculaEliminada = await Pelicula.findByIdAndDelete(req.params.id);
+        if (!peliculaEliminada) {
+            return res.status(404).json({ error: "Película no encontrada" });
+        }
+        res.json(peliculaEliminada);
+    } catch (error) {
+        console.error("Error al eliminar la película:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
+
+// Ruta PUT Puntuación de Película
+app.put("/peliculas/:id/puntuacion", async (req, res) => {
+    try {
+        const { puntuacion } = req.body;
+        if (!puntuacion || puntuacion < 1 || puntuacion > 5) {
+            return res.status(400).json({ error: "La puntuación debe estar entre 1 y 5" });
+        }
+        const peliculaActualizada = await Pelicula.findByIdAndUpdate(
+            req.params.id,
+            { puntuacion },
+            { new: true }
+        );
+        if (!peliculaActualizada) {
+            return res.status(404).json({ error: "Película no encontrada" });
+        }
+        res.json(peliculaActualizada);
+    } catch (error) {
+        console.error("Error al actualizar la puntuación de la película:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Servidor en funcionamiento en http://localhost:${PORT}`);
